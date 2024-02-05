@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  username String @unique
+  displayName String
+  email String
+  passwordHash String
+  // Unused for now 
+  // Roles include USER, REGULAR, ADMIN, OWNER
+  role String
+  profilePicture String?
+
+  threads Thread[]
+  posts Post[]
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String @unique
+  section String @default("Other")
+
+  threads Thread[]
+
+  isLocked Boolean @default(false)
+}
+
+model Thread {
+  id Int @id @default(autoincrement())
+  title String
+  tags String[]
+
+  categoryId Int
+  category Category @relation(fields: [categoryId], references: [id])
+
+  authorId Int
+  author User @relation(fields: [authorId], references: [id])
+
+  posts Post[]
+
+  createdAt DateTime @default(now())
+  isLocked Boolean @default(false)
+}
+
+model Post {
+  id Int @id @default(autoincrement())
+  content String
+  replyPostId Int?
+  
+  threadId Int
+  thread Thread @relation(fields: [threadId], references: [id])
+
+  authorId Int
+  author User @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  isEdited Boolean @default(false)
+  isDeleted Boolean @default(false)
+}
