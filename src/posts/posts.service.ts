@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Post } from '@prisma/client';
+import { Post, User } from '@prisma/client';
 import {
   POST_CANNOT_UPDATE_NOT_AUTHOR,
   POST_ID_NOT_FOUND,
@@ -11,7 +11,6 @@ import {
 } from 'src/constants';
 import { PrismaService } from 'src/services/prisma.service';
 import { Option } from 'src/types';
-import { PublicUser } from 'src/users/users.service';
 
 @Injectable()
 export class PostsService {
@@ -31,7 +30,7 @@ export class PostsService {
   public async createPost(
     threadId: number,
     content: string,
-    author: PublicUser,
+    author: User,
     replyId?: number,
   ) {
     return await this.prisma.post.create({
@@ -47,23 +46,24 @@ export class PostsService {
   public async updatePost(
     id: Option<number>,
     content: string,
-    user: PublicUser,
+    user: User,
   ): Promise<Post> {
     const post = await this.getPost(id);
     if (post.authorId !== user.id)
       throw new BadRequestException(POST_CANNOT_UPDATE_NOT_AUTHOR);
     return await this.prisma.post.update({
       where: { id },
-      data: { content },
+      data: { content, isEdited: true },
     });
   }
 
-  public async deletePost(id: Option<number>, user: PublicUser) {
+  public async deletePost(id: Option<number>, user: User) {
     const post = await this.getPost(id);
     if (post.authorId !== user.id)
       throw new BadRequestException(POST_CANNOT_UPDATE_NOT_AUTHOR);
-    return await this.prisma.post.delete({
+    return await this.prisma.post.update({
       where: { id },
+      data: { isDeleted: true, content: '' },
     });
   }
 
@@ -76,6 +76,11 @@ export class PostsService {
       where: { threadId },
       skip: (page - 1) * count,
       take: count,
+      orderBy: { createdAt: 'asc' },
+      include: {
+        author: true,
+        thread: true,
+      },
     });
   }
 }

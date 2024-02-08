@@ -12,11 +12,8 @@ import { Option } from 'src/types';
 export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  public async getCategories(page: number = 1, count: number = 10) {
-    return await this.prisma.category.findMany({
-      skip: (page - 1) * count,
-      take: count,
-    });
+  public async getCategories() {
+    return await this.prisma.category.findMany();
   }
 
   public async getCategory(id?: number): Promise<Option<Category>> {

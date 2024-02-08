@@ -30,11 +30,8 @@ export class CategoriesController {
   ) {}
 
   @Get()
-  async getCategories(
-    @QueryGetNumber('page') page: Option<number>,
-    @QueryGetNumber('count') count: Option<number>,
-  ) {
-    return await this.categories.getCategories(page, count);
+  async getCategories() {
+    return await this.categories.getCategories();
   }
 
   @Get(':id')
@@ -65,6 +62,7 @@ export class CategoriesController {
     const createdThread = await this.threads.createThread(
       id,
       body.title,
+      body.tags || [],
       request.user,
     );
     return await this.posts.createPost(

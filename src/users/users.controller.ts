@@ -10,6 +10,8 @@ import { UsersService } from './users.service';
 import { SignUpDto } from './signup.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ExpressReq } from 'src/types';
+import { ParamGetNumber } from 'src/decorators/paramGetNumber';
+import { Option } from 'src/types';
 
 @Controller('users')
 export class UsersController {
@@ -24,5 +26,10 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   async getAccount(@Request() request: ExpressReq) {
     return request.user;
+  }
+
+  @Get(':id')
+  async getUser(@ParamGetNumber('id') id: Option<number>) {
+    return await this.user.findUser(id);
   }
 }

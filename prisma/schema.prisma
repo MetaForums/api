@@ -10,12 +10,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model UserData {
+  passwordHash String
+  email String
+
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+}
+
 model User {
   id Int @id @default(autoincrement())
   username String @unique
   displayName String
-  email String
-  passwordHash String
   // Unused for now 
   // Roles include USER, REGULAR, ADMIN, OWNER
   role String
@@ -23,12 +29,14 @@ model User {
 
   threads Thread[]
   posts Post[]
+  data UserData?
 }
 
 model Category {
   id Int @id @default(autoincrement())
   name String @unique
   section String @default("Other")
+  description String?
 
   threads Thread[]
 

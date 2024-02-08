@@ -3,10 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Thread } from '@prisma/client';
+import { Thread, User } from '@prisma/client';
 import { THREAD_ID_NOT_FOUND, THREAD_ID_NOT_VALID } from 'src/constants';
 import { PrismaService } from 'src/services/prisma.service';
-import { PublicUser } from 'src/users/users.service';
 
 @Injectable()
 export class ThreadsService {
@@ -32,18 +31,24 @@ export class ThreadsService {
       where: { categoryId },
       skip: (page - 1) * count,
       take: count,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: true,
+      },
     });
   }
 
   public async createThread(
     categoryId: number,
     title: string,
-    author: PublicUser,
+    tags: string[],
+    author: User,
   ): Promise<Thread> {
     return await this.prisma.thread.create({
       data: {
         categoryId,
         title,
+        tags,
         authorId: author.id,
       },
     });

@@ -3,18 +3,22 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Post, User as PrismaUser, Thread } from '@prisma/client';
+import { User, UserData } from '@prisma/client';
 import { SignUpDto } from 'src/users/signup.dto';
 import { USER_NOT_FOUND, USER_USERNAME_EXISTS } from 'src/constants';
 import { PrismaService } from 'src/services/prisma.service';
 import { Option } from 'src/types';
 import { hash } from 'bcrypt';
 
-export type User = PrismaUser & {
-  posts: Post[];
-  threads: Thread[];
+export type UserIData = User & {
+  data: UserData;
 };
-export type PublicUser = Omit<User, 'passwordHash' | 'email'>;
+
+// export type User = PrismaUser & {
+//   posts: Post[];
+//   threads: Thread[];
+// };
+// export type PublicUser = Omit<User, 'passwordHash' | 'email'>;
 
 @Injectable()
 export class UsersService {
@@ -23,7 +27,7 @@ export class UsersService {
   public async findOne<WhereT extends 'username' | 'id'>(
     where: WhereT,
     data: WhereT extends 'username' ? string : number,
-  ): Promise<Option<User>> {
+  ): Promise<Option<UserIData>> {
     return await this.prisma.user.findUnique({
       where: {
         username: where === 'username' ? (data as string) : undefined,
@@ -36,16 +40,15 @@ export class UsersService {
         threads: {
           take: 5,
         },
+        data: true,
       },
     });
   }
 
-  public async findUser(userId: number): Promise<Option<PublicUser>> {
+  public async findUser(userId: number): Promise<Option<User>> {
     const user = await this.findOne('id', userId);
     if (!user) throw new NotFoundException(USER_NOT_FOUND);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, email, ...publicUser } = user;
-    return publicUser;
+    return user;
   }
 
   public async createUser({
@@ -53,7 +56,7 @@ export class UsersService {
     displayName,
     password,
     email,
-  }: SignUpDto): Promise<PublicUser> {
+  }: SignUpDto): Promise<User> {
     if (await this.findOne('username', username))
       throw new ConflictException(USER_USERNAME_EXISTS);
 
@@ -61,9 +64,17 @@ export class UsersService {
       data: {
         username,
         displayName,
-        passwordHash: await hash(password, 10),
-        email,
+        // passwordHash: await hash(password, 10),
+        // email,
         role: 'USER',
+      },
+    });
+
+    await this.prisma.userData.create({
+      data: {
+        userId: user.id,
+        email,
+        passwordHash: await hash(password, 10),
       },
     });
 
