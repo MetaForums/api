@@ -1,17 +1,3 @@
-declare module 'Express' {
-  interface Request {
-    user?: {
-      id: number;
-      username: string;
-      displayName: string;
-      role: string;
-      profilePicture: string;
-      posts: any[];
-      threads: any[];
-    };
-  }
-}
-
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
